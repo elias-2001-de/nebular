@@ -1,0 +1,27 @@
+{
+  "title": "My Dynamic TUI",
+  "border": true,
+  "margin": 1,
+  "content": [
+    {
+      "type": "text",
+      "text": "Welcome to my app!",
+      "color": "blue",
+      "style": ["bold"]
+    },
+    {
+      "type": "text", 
+      "text": "This content is loaded from a file",
+      "color": "green"
+    },
+    {
+      "type": "text",
+      "text": ""
+    },
+    {
+      "type": "text",
+      "text": "Press 'q' to quit",
+      "color": "gray"
+    }
+  ]
+}

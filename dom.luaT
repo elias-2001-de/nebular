@@ -1,0 +1,40 @@
+return {
+  title = "Nebular - Lua TUI Browser",
+  border = true,
+  margin = 1,
+  elements = {
+    {
+      type = "text",
+      text = "Welcome to Nebular!",
+      color = "blue",
+      style = {"bold"},
+      id = "header"
+    },
+    {
+      type = "text",
+      text = "This DOM is defined in a .luaT file",
+      color = "green",
+      id = "description"
+    },
+    {
+      type = "text",
+      text = ""
+    },
+    {
+      type = "text",
+      text = "Dynamic content will appear here",
+      color = "yellow",
+      id = "dynamic_content"
+    },
+    {
+      type = "text",
+      text = ""
+    },
+    {
+      type = "text",
+      text = "Press 'q' to quit",
+      color = "gray",
+      id = "instructions"
+    }
+  }
+}

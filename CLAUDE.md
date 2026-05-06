@@ -30,19 +30,18 @@ The application is split across two files:
 
 ## DSL (`.neb` files)
 
-Pages are defined in `page.neb` (loaded from the working directory at startup). Syntax:
+Pages are defined in `page.neb` (loaded from the working directory at startup). The DSL uses a Maud-inspired block syntax parsed by a tokenizer + recursive-descent parser in `src/dsl.rs`.
 
 ```
-title My App        # window title
-border              # enable border
-margin 1            # padding
----                 # separates config from content
-[blue bold] Hello!  # styled text: optional color then style flags
-[green] Sub-text    # color only
-                    # blank line = empty line in output
-Plain text          # no brackets = unstyled (white)
-# this is a comment
+// comment
+page title="My App" border margin=1 {
+    .blue.bold  "Hello!"        // color + modifier(s) then quoted text
+    .green      "Sub-text"      // color only
+    ""                          // blank line in output
+    "Plain unstyled text"       // no modifiers = white
+}
 ```
 
-Supported colors: `red green blue yellow cyan magenta gray grey white`.  
-Supported style flags: `bold italic underlined` (can be combined: `[cyan bold italic]`).
+**Page attributes** (all optional): `title="…"`, `border` (flag), `margin=N`.  
+**Supported colors**: `red green blue yellow cyan magenta gray grey white`.  
+**Supported modifiers**: `bold italic underlined` — chain freely: `.cyan.bold.italic`.

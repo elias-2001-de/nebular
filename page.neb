@@ -1,0 +1,8 @@
+title My Dynamic TUI
+border
+margin 1
+---
+[blue bold] Welcome to my app!
+[green] This content is loaded from a file
+
+[gray] Press 'q' to quit

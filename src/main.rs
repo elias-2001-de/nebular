@@ -1,3 +1,5 @@
+mod dsl;
+
 use ratatui::{
     backend::CrosstermBackend,
     crossterm::{
@@ -11,32 +13,24 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     Frame, Terminal,
 };
-use serde::{Deserialize, Serialize};
 use std::{fs, io};
 
-#[derive(Serialize, Deserialize, Debug)]
-struct TuiConfig {
+pub(crate) struct TuiConfig {
     title: String,
     border: bool,
     margin: u16,
     content: Vec<ContentItem>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct ContentItem {
-    #[serde(rename = "type")]
-    item_type: String,
+pub(crate) struct ContentItem {
     text: String,
-    #[serde(default)]
     color: Option<String>,
-    #[serde(default)]
     style: Option<Vec<String>>,
 }
 
 fn load_config() -> Result<TuiConfig, Box<dyn std::error::Error>> {
-    let config_str = fs::read_to_string("tui_config.json")?;
-    let config: TuiConfig = serde_json::from_str(&config_str)?;
-    Ok(config)
+    let src = fs::read_to_string("page.neb")?;
+    dsl::parse(&src).map_err(|e| e.into())
 }
 
 fn parse_color(color_str: &Option<String>) -> Color {
@@ -56,8 +50,8 @@ fn parse_color(color_str: &Option<String>) -> Color {
 fn parse_style_modifiers(styles: &Option<Vec<String>>) -> Modifier {
     let mut modifier = Modifier::empty();
     if let Some(style_vec) = styles {
-        for style in style_vec {
-            match style.as_str() {
+        for s in style_vec {
+            match s.as_str() {
                 "bold" => modifier |= Modifier::BOLD,
                 "italic" => modifier |= Modifier::ITALIC,
                 "underlined" => modifier |= Modifier::UNDERLINED,
@@ -93,10 +87,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn run_app(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>, config: TuiConfig) -> io::Result<()> {
+fn run_app(
+    terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
+    config: TuiConfig,
+) -> io::Result<()> {
     loop {
         terminal.draw(|frame| ui(frame, &config))?;
-
         if let Event::Key(key) = event::read()? {
             if key.code == KeyCode::Char('q') {
                 return Ok(());
@@ -112,24 +108,25 @@ fn ui(frame: &mut Frame, config: &TuiConfig) {
         .constraints([Constraint::Percentage(100)].as_ref())
         .split(frame.area());
 
-    let mut lines = Vec::new();
-    
-    for item in &config.content {
-        if item.text.is_empty() {
-            lines.push(Line::from(Span::raw("")));
-        } else {
-            let color = parse_color(&item.color);
-            let modifier = parse_style_modifiers(&item.style);
-            let style = Style::default().fg(color).add_modifier(modifier);
-            lines.push(Line::from(Span::styled(&item.text, style)));
-        }
-    }
+    let lines: Vec<Line> = config
+        .content
+        .iter()
+        .map(|item| {
+            if item.text.is_empty() {
+                Line::from(Span::raw(""))
+            } else {
+                let style = Style::default()
+                    .fg(parse_color(&item.color))
+                    .add_modifier(parse_style_modifiers(&item.style));
+                Line::from(Span::styled(&item.text, style))
+            }
+        })
+        .collect();
 
     let mut block = Block::default().title(config.title.as_str());
     if config.border {
         block = block.borders(Borders::ALL);
     }
 
-    let paragraph = Paragraph::new(lines).block(block);
-    frame.render_widget(paragraph, chunks[0]);
+    frame.render_widget(Paragraph::new(lines).block(block), chunks[0]);
 }

@@ -19,12 +19,30 @@ cargo test           # run tests
 
 ## Architecture
 
-The entire application lives in `src/main.rs`. It follows the standard ratatui event-loop pattern:
+The application is split across two files:
 
-1. **`main()`** — reads `tui_config.json`, sets up the crossterm terminal (raw mode, alternate screen, mouse capture), calls `run_app()`, then tears down the terminal on exit.
-2. **`run_app()`** — the event loop: draws a frame, blocks on `event::read()`, exits when `q` is pressed.
-3. **`ui()`** — renders a single full-screen `Paragraph` widget inside an optional bordered `Block`, built from the config's content items.
+- **`src/dsl.rs`** — parses `.neb` files into `TuiConfig`/`ContentItem` structs.
+- **`src/main.rs`** — terminal setup, the ratatui event loop, and rendering.
 
-**Config-driven rendering**: `tui_config.json` (loaded at runtime from the current working directory) drives everything displayed. It deserializes into `TuiConfig` (title, border, margin, content list) and `ContentItem` (type, text, optional color/style). `parse_color()` and `parse_style_modifiers()` translate the JSON string values into ratatui `Color` and `Modifier` types.
+**Event-loop flow**: `main()` loads `page.neb`, sets up the crossterm terminal (raw mode, alternate screen, mouse capture), calls `run_app()`, then tears down the terminal on exit. `run_app()` draws a frame per iteration and exits on `q`. `ui()` renders a single full-screen `Paragraph` inside an optional bordered `Block`.
 
-**Dependencies**: `ratatui` for TUI widgets/layout, `crossterm` as the terminal backend (re-exported through ratatui), `serde`/`serde_json` for config deserialization.
+**Dependencies**: `ratatui` for widgets/layout, `crossterm` as the terminal backend (re-exported through ratatui).
+
+## DSL (`.neb` files)
+
+Pages are defined in `page.neb` (loaded from the working directory at startup). Syntax:
+
+```
+title My App        # window title
+border              # enable border
+margin 1            # padding
+---                 # separates config from content
+[blue bold] Hello!  # styled text: optional color then style flags
+[green] Sub-text    # color only
+                    # blank line = empty line in output
+Plain text          # no brackets = unstyled (white)
+# this is a comment
+```
+
+Supported colors: `red green blue yellow cyan magenta gray grey white`.  
+Supported style flags: `bold italic underlined` (can be combined: `[cyan bold italic]`).
